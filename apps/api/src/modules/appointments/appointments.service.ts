@@ -78,19 +78,13 @@ export class AppointmentsService {
       startAt.getTime() + psychologist.consultationDurationMinutes * 60_000
     );
 
-    await this.ensureSlotIsAvailable(psychologist.id, startAt, endAt);
-
-    const appointment = await this.prisma.appointment.create({
-      data: {
-        psychologistId: psychologist.id,
-        patientId: user.id,
-        startAt,
-        endAt,
-        modality: dto.modality,
-        status: AppointmentStatus.PENDING
-      },
-      include: appointmentInclude
-    });
+    const appointment = await this.createAppointmentWithSerializableCheck(
+      user.id,
+      psychologist.id,
+      startAt,
+      endAt,
+      dto.modality
+    );
 
     await this.notificationsService.enqueueAppointmentCreated(appointment.id);
     await this.notificationsService.enqueueAppointmentReminder(
@@ -211,6 +205,7 @@ export class AppointmentsService {
   }
 
   private async ensureSlotIsAvailable(
+    prisma: PrismaService | Prisma.TransactionClient,
     psychologistId: string,
     startAt: Date,
     endAt: Date
@@ -221,7 +216,7 @@ export class AppointmentsService {
     const endMinute = endAt.getHours() * 60 + endAt.getMinutes();
 
     const [availability, block, conflict] = await Promise.all([
-      this.prisma.availability.findFirst({
+      prisma.availability.findFirst({
         where: {
           psychologistId,
           weekday: startAt.getDay(),
@@ -234,7 +229,7 @@ export class AppointmentsService {
           }
         }
       }),
-      this.prisma.scheduleBlock.findFirst({
+      prisma.scheduleBlock.findFirst({
         where: {
           psychologistId,
           startAt: {
@@ -245,7 +240,7 @@ export class AppointmentsService {
           }
         }
       }),
-      this.prisma.appointment.findFirst({
+      prisma.appointment.findFirst({
         where: {
           psychologistId,
           status: {
@@ -282,6 +277,46 @@ export class AppointmentsService {
       )
     ) {
       throw new BadRequestException('Horario fora da disponibilidade.');
+    }
+  }
+
+  private async createAppointmentWithSerializableCheck(
+    patientId: string,
+    psychologistId: string,
+    startAt: Date,
+    endAt: Date,
+    modality: AppointmentModality
+  ) {
+    try {
+      return await this.prisma.$transaction(
+        async (tx) => {
+          await this.ensureSlotIsAvailable(tx, psychologistId, startAt, endAt);
+
+          return tx.appointment.create({
+            data: {
+              psychologistId,
+              patientId,
+              startAt,
+              endAt,
+              modality,
+              status: AppointmentStatus.PENDING
+            },
+            include: appointmentInclude
+          });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+        }
+      );
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2034'
+      ) {
+        throw new BadRequestException('Horario ja agendado.');
+      }
+
+      throw error;
     }
   }
 

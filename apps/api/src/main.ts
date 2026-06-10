@@ -9,6 +9,16 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
   const port = configService.get<number>('API_PORT', 3333);
+  const webUrl =
+    configService.get<string>('WEB_URL') ??
+    configService.get<string>('NEXT_PUBLIC_SITE_URL') ??
+    'http://localhost:3000';
+
+  app.enableCors({
+    origin: webUrl,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

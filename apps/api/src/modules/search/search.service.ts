@@ -122,6 +122,38 @@ export class SearchService {
     };
   }
 
+  listSpecialties() {
+    return this.prisma.specialty.findMany({
+      where: {
+        active: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+  }
+
+  listApproaches() {
+    return this.prisma.approach.findMany({
+      where: {
+        active: true
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+  }
+
   private buildPriceFilter(query: SearchPsychologistsDto) {
     if (query.minPrice === undefined && query.maxPrice === undefined) {
       return undefined;

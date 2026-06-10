@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { BookingWidget } from '@/features/booking/booking-widget';
 import { getPublicPsychologistProfile } from '@/services/psychologists';
 
 type PsychologistPageProps = {
@@ -125,7 +126,12 @@ export default async function PsychologistPublicPage({
 
         <div className="detail-panel" id="agendar">
           <h2>Agendamento</h2>
-          <p>Os horarios disponiveis serao exibidos na etapa de agenda.</p>
+          <BookingWidget
+            durationMinutes={profile.consultationDurationMinutes}
+            offersInPerson={profile.offersInPerson}
+            offersOnline={profile.offersOnline}
+            psychologistId={profile.id}
+          />
         </div>
 
         <div className="detail-panel reviews-panel">

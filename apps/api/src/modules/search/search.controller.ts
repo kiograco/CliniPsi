@@ -10,4 +10,14 @@ export class SearchController {
   searchPsychologists(@Query() query: SearchPsychologistsDto) {
     return this.searchService.searchPsychologists(query);
   }
+
+  @Get('specialties')
+  listSpecialties() {
+    return this.searchService.listSpecialties();
+  }
+
+  @Get('approaches')
+  listApproaches() {
+    return this.searchService.listApproaches();
+  }
 }

@@ -84,8 +84,11 @@ function createService() {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn()
-    }
+    },
+    $transaction: jest.fn()
   };
+
+  prisma.$transaction.mockImplementation((callback) => callback(prisma));
 
   const paymentsService = {
     ensurePsychologistCanUseSaas: jest.fn()

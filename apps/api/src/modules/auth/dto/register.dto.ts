@@ -1,7 +1,7 @@
 import { UserRole } from '@prisma/client';
 import {
   IsEmail,
-  IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   MaxLength,
@@ -24,6 +24,6 @@ export class RegisterDto {
   password!: string;
 
   @IsOptional()
-  @IsEnum(UserRole)
+  @IsIn([UserRole.PATIENT, UserRole.PSYCHOLOGIST])
   role: UserRole = UserRole.PATIENT;
 }

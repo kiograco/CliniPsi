@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserStatus } from '@prisma/client';
+import { User, UserRole, UserStatus } from '@prisma/client';
 import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -39,6 +39,10 @@ export class AuthService {
 
     if (existingUser) {
       throw new BadRequestException('E-mail ja cadastrado.');
+    }
+
+    if (dto.role === UserRole.ADMIN) {
+      throw new BadRequestException('Perfil de cadastro invalido.');
     }
 
     const user = await this.prisma.user.create({

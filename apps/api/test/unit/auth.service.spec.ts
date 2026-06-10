@@ -132,6 +132,20 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('bloqueia autocadastro como admin', async () => {
+    const { service, usersService } = createService();
+    usersService.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      service.register({
+        name: 'Admin Teste',
+        email: 'admin@example.com',
+        password: 'senha-forte',
+        role: UserRole.ADMIN
+      })
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('autentica usuario ativo com senha valida', async () => {
     const { service, prisma, usersService } = createService();
     const passwordHash = await hashPassword('senha-forte');
