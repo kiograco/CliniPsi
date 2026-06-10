@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PSYCHOLOGIST
+  PATIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum PsychologistApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                    String               @id @default(uuid()) @db.Uuid
+  name                  String               @db.VarChar(120)
+  email                 String               @unique @db.VarChar(255)
+  passwordHash          String
+  role                  UserRole             @default(PATIENT)
+  status                UserStatus           @default(ACTIVE)
+  emailVerifiedAt       DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  refreshTokens         RefreshToken[]
+  passwordResetTokens   PasswordResetToken[]
+  psychologistProfile   PsychologistProfile?
+  approvedProfiles      PsychologistProfile[] @relation("PsychologistApprovedBy")
+
+  @@index([role])
+  @@index([status])
+}
+
+model PsychologistProfile {
+  id                          String                       @id @default(uuid()) @db.Uuid
+  userId                      String                       @unique @db.Uuid
+  professionalName            String                       @db.VarChar(120)
+  slug                        String                       @unique @db.VarChar(160)
+  crp                         String                       @unique @db.VarChar(30)
+  photoUrl                    String?                      @db.VarChar(500)
+  bio                         String                       @db.Text
+  consultationPrice           Decimal                      @db.Decimal(10, 2)
+  consultationDurationMinutes Int
+  offersOnline                Boolean                      @default(false)
+  offersInPerson              Boolean                      @default(false)
+  city                        String?                      @db.VarChar(120)
+  state                       String?                      @db.VarChar(2)
+  address                     String?                      @db.VarChar(255)
+  whatsapp                    String?                      @db.VarChar(30)
+  approvalStatus              PsychologistApprovalStatus   @default(PENDING)
+  approvedAt                  DateTime?
+  approvedById                String?                      @db.Uuid
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy                  User?                        @relation("PsychologistApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  specialties                 PsychologistSpecialty[]
+  approaches                  PsychologistApproach[]
+
+  @@index([approvalStatus])
+  @@index([city, state])
+}
+
+model Specialty {
+  id             String                    @id @default(uuid()) @db.Uuid
+  name           String                    @unique @db.VarChar(120)
+  slug           String                    @unique @db.VarChar(160)
+  active         Boolean                   @default(true)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  psychologists  PsychologistSpecialty[]
+}
+
+model Approach {
+  id             String                    @id @default(uuid()) @db.Uuid
+  name           String                    @unique @db.VarChar(120)
+  slug           String                    @unique @db.VarChar(160)
+  active         Boolean                   @default(true)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  psychologists  PsychologistApproach[]
+}
+
+model PsychologistSpecialty {
+  psychologistId String               @db.Uuid
+  specialtyId    String               @db.Uuid
+  psychologist   PsychologistProfile  @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+  specialty      Specialty            @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+
+  @@id([psychologistId, specialtyId])
+  @@index([specialtyId])
+}
+
+model PsychologistApproach {
+  psychologistId String               @db.Uuid
+  approachId     String               @db.Uuid
+  psychologist   PsychologistProfile  @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+  approach       Approach             @relation(fields: [approachId], references: [id], onDelete: Restrict)
+
+  @@id([psychologistId, approachId])
+  @@index([approachId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
