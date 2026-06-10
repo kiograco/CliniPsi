@@ -25,6 +25,18 @@ enum PsychologistApprovalStatus {
   REJECTED
 }
 
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  COMPLETED
+}
+
+enum AppointmentModality {
+  ONLINE
+  IN_PERSON
+}
+
 model User {
   id                    String               @id @default(uuid()) @db.Uuid
   name                  String               @db.VarChar(120)
@@ -39,6 +51,8 @@ model User {
   passwordResetTokens   PasswordResetToken[]
   psychologistProfile   PsychologistProfile?
   approvedProfiles      PsychologistProfile[] @relation("PsychologistApprovedBy")
+  patientAppointments   Appointment[]          @relation("PatientAppointments")
+  canceledAppointments  Appointment[]          @relation("CanceledAppointments")
 
   @@index([role])
   @@index([status])
@@ -71,6 +85,7 @@ model PsychologistProfile {
   approaches                  PsychologistApproach[]
   availabilities              Availability[]
   scheduleBlocks              ScheduleBlock[]
+  appointments                Appointment[]
 
   @@index([approvalStatus])
   @@index([city, state])
@@ -141,6 +156,28 @@ model ScheduleBlock {
   psychologist   PsychologistProfile @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
 
   @@index([psychologistId, startAt, endAt])
+}
+
+model Appointment {
+  id                 String              @id @default(uuid()) @db.Uuid
+  psychologistId     String              @db.Uuid
+  patientId          String              @db.Uuid
+  startAt            DateTime
+  endAt              DateTime
+  status             AppointmentStatus   @default(PENDING)
+  modality           AppointmentModality
+  cancellationReason String?             @db.VarChar(255)
+  canceledById       String?             @db.Uuid
+  canceledAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  psychologist       PsychologistProfile @relation(fields: [psychologistId], references: [id], onDelete: Restrict)
+  patient            User                @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Restrict)
+  canceledBy         User?               @relation("CanceledAppointments", fields: [canceledById], references: [id], onDelete: SetNull)
+
+  @@index([psychologistId, startAt, endAt])
+  @@index([patientId, startAt])
+  @@index([status])
 }
 
 model RefreshToken {

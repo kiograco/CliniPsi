@@ -5,6 +5,8 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import {
+  Appointment,
+  AppointmentStatus,
   Availability,
   PsychologistApprovalStatus,
   ScheduleBlock,
@@ -226,7 +228,7 @@ export class ScheduleService {
     }
 
     const weekday = date.getDay();
-    const [availabilities, blocks] = await Promise.all([
+    const [availabilities, blocks, appointments] = await Promise.all([
       this.prisma.availability.findMany({
         where: {
           psychologistId,
@@ -247,11 +249,31 @@ export class ScheduleService {
             gt: date
           }
         }
+      }),
+      this.prisma.appointment.findMany({
+        where: {
+          psychologistId,
+          status: {
+            in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED]
+          },
+          startAt: {
+            lt: this.endOfDay(date)
+          },
+          endAt: {
+            gt: date
+          }
+        }
       })
     ]);
 
     const slots = availabilities.flatMap((availability) =>
-      this.buildSlotsForAvailability(date, availability, blocks, query.durationMinutes)
+      this.buildSlotsForAvailability(
+        date,
+        availability,
+        blocks,
+        appointments,
+        query.durationMinutes
+      )
     );
 
     return {
@@ -375,6 +397,7 @@ export class ScheduleService {
     date: Date,
     availability: Availability,
     blocks: ScheduleBlock[],
+    appointments: Appointment[],
     durationMinutes: number
   ) {
     const slots: Array<{ startAt: string; endAt: string }> = [];
@@ -395,8 +418,16 @@ export class ScheduleService {
           block.endAt.getTime()
         )
       );
+      const occupied = appointments.some((appointment) =>
+        rangesOverlap(
+          startAt.getTime(),
+          endAt.getTime(),
+          appointment.startAt.getTime(),
+          appointment.endAt.getTime()
+        )
+      );
 
-      if (!blocked) {
+      if (!blocked && !occupied) {
         slots.push({
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString()

@@ -35,6 +35,9 @@ function createService() {
       findMany: jest.fn(),
       findFirst: jest.fn(),
       delete: jest.fn()
+    },
+    appointment: {
+      findMany: jest.fn()
     }
   };
 
@@ -143,6 +146,7 @@ describe('ScheduleService', () => {
         updatedAt: new Date()
       }
     ]);
+    prisma.appointment.findMany.mockResolvedValue([]);
 
     const result = await service.getAvailableSlots(profile.id, {
       date: '2026-06-15',
