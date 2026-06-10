@@ -13,6 +13,7 @@ export type SearchPsychologistsParams = {
   specialtySlug?: string;
   approachSlug?: string;
   page?: string;
+  perPage?: string;
 };
 
 export async function getPublicPsychologistProfile(slug: string) {

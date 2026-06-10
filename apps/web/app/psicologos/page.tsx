@@ -1,6 +1,16 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { searchPsychologists } from '@/services/psychologists';
+
+export const metadata: Metadata = {
+  title: 'Psicologos | DivulgaPsi',
+  description:
+    'Busque psicologos por cidade, estado, modalidade, especialidade e faixa de preco.',
+  alternates: {
+    canonical: '/psicologos'
+  }
+};
 
 type PsychologistsSearchPageProps = {
   searchParams: Promise<{
@@ -86,8 +96,8 @@ export default async function PsychologistsSearchPage({
                   <p>{profile.crp}</p>
                   <p>{location || 'Atendimento online'}</p>
                   <p>
-                    R$ {profile.consultationPrice.toFixed(2).replace('.', ',')}{' '}
-                    · {profile.consultationDurationMinutes} min
+                    R$ {profile.consultationPrice.toFixed(2).replace('.', ',')} -{' '}
+                    {profile.consultationDurationMinutes} min
                   </p>
                   <div className="tag-list">
                     {profile.specialties.slice(0, 3).map((specialty) => (
