@@ -30,7 +30,7 @@ packages/
 
 ## Ambiente local
 
-1. Copie `.env.example` para `.env`.
+1. Copie `.env.example` para `.env` e preencha os segredos locais.
 2. Suba PostgreSQL e Redis:
 
 ```bash
