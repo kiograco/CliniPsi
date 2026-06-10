@@ -14,6 +14,7 @@ import {
 } from '@prisma/client';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PaymentsService } from '../payments/payments.service';
 import { dateAtMinute, rangesOverlap } from '../schedule/utils/time.util';
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
@@ -41,7 +42,8 @@ const appointmentInclude = {
 export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly paymentsService: PaymentsService
+    private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   async create(user: AuthenticatedUser, dto: CreateAppointmentDto) {
@@ -89,6 +91,12 @@ export class AppointmentsService {
       },
       include: appointmentInclude
     });
+
+    await this.notificationsService.enqueueAppointmentCreated(appointment.id);
+    await this.notificationsService.enqueueAppointmentReminder(
+      appointment.id,
+      appointment.startAt
+    );
 
     return this.toAppointmentResponse(appointment);
   }
@@ -177,6 +185,8 @@ export class AppointmentsService {
       },
       include: appointmentInclude
     });
+
+    await this.notificationsService.enqueueAppointmentCanceled(canceled.id);
 
     return this.toAppointmentResponse(canceled);
   }

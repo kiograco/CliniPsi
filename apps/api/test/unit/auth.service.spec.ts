@@ -47,6 +47,10 @@ function createService() {
     signAsync: jest.fn().mockResolvedValue('access-token')
   };
 
+  const notificationsService = {
+    enqueueRegistrationConfirmation: jest.fn()
+  };
+
   const configService = {
     get: jest.fn((key: string, fallback?: string) => {
       const values: Record<string, string> = {
@@ -70,20 +74,23 @@ function createService() {
     prisma as never,
     usersService as unknown as UsersService,
     jwtService as unknown as JwtService,
-    configService as unknown as ConfigService
+    configService as unknown as ConfigService,
+    notificationsService as never
   );
 
   return {
     service,
     prisma,
     usersService,
-    jwtService
+    jwtService,
+    notificationsService
   };
 }
 
 describe('AuthService', () => {
   it('registra usuario novo e nao retorna passwordHash', async () => {
-    const { service, prisma, usersService } = createService();
+    const { service, prisma, usersService, notificationsService } =
+      createService();
     usersService.findByEmail.mockResolvedValue(null);
     prisma.user.create.mockResolvedValue(activeUser);
     prisma.refreshToken.create.mockResolvedValue({});
@@ -106,6 +113,9 @@ describe('AuthService', () => {
     expect(result.user).not.toHaveProperty('passwordHash');
     expect(result.accessToken).toBe('access-token');
     expect(result.refreshToken).toHaveLength(96);
+    expect(
+      notificationsService.enqueueRegistrationConfirmation
+    ).toHaveBeenCalledWith(activeUser.id);
   });
 
   it('bloqueia cadastro com e-mail duplicado', async () => {

@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User, UserStatus } from '@prisma/client';
 import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
@@ -28,7 +29,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   async register(dto: RegisterDto) {
@@ -47,6 +49,8 @@ export class AuthService {
         role: dto.role
       }
     });
+
+    await this.notificationsService.enqueueRegistrationConfirmation(user.id);
 
     return this.buildAuthResponse(user);
   }

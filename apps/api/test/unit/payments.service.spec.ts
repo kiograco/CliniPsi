@@ -81,15 +81,20 @@ function createService() {
       checkoutUrl: 'https://sandbox.asaas.local/payments/asaas-payment-id'
     })
   };
+  const notificationsService = {
+    enqueuePaymentApproved: jest.fn()
+  };
 
   return {
     service: new PaymentsService(
       prisma as never,
       configService as unknown as ConfigService,
-      asaasProvider as never
+      asaasProvider as never,
+      notificationsService as never
     ),
     prisma,
-    asaasProvider
+    asaasProvider,
+    notificationsService
   };
 }
 
@@ -128,7 +133,7 @@ describe('PaymentsService', () => {
   });
 
   it('processa webhook assinado e confirma pagamento', async () => {
-    const { service, prisma } = createService();
+    const { service, prisma, notificationsService } = createService();
     const body = {
       event: 'PAYMENT_RECEIVED',
       payment: {
@@ -158,6 +163,9 @@ describe('PaymentsService', () => {
     });
 
     expect(result.received).toBe(true);
+    expect(notificationsService.enqueuePaymentApproved).toHaveBeenCalledWith(
+      'payment-id'
+    );
     expect(prisma.paymentWebhookEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

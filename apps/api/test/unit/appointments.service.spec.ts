@@ -90,16 +90,26 @@ function createService() {
   const paymentsService = {
     ensurePsychologistCanUseSaas: jest.fn()
   };
+  const notificationsService = {
+    enqueueAppointmentCreated: jest.fn(),
+    enqueueAppointmentReminder: jest.fn(),
+    enqueueAppointmentCanceled: jest.fn()
+  };
 
   return {
-    service: new AppointmentsService(prisma as never, paymentsService as never),
-    prisma
+    service: new AppointmentsService(
+      prisma as never,
+      paymentsService as never,
+      notificationsService as never
+    ),
+    prisma,
+    notificationsService
   };
 }
 
 describe('AppointmentsService', () => {
   it('cria consulta pendente em horario disponivel', async () => {
-    const { service, prisma } = createService();
+    const { service, prisma, notificationsService } = createService();
     prisma.psychologistProfile.findFirst.mockResolvedValue(psychologistProfile);
     prisma.availability.findFirst.mockResolvedValue({
       id: 'availability-id',
@@ -124,6 +134,9 @@ describe('AppointmentsService', () => {
           psychologistId: psychologistProfile.id
         })
       })
+    );
+    expect(notificationsService.enqueueAppointmentCreated).toHaveBeenCalledWith(
+      '5fd6b513-f1a5-46cf-bc0b-8b159c475cd1'
     );
   });
 

@@ -16,6 +16,7 @@ import {
 import { createHmac, timingSafeEqual } from 'crypto';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateAppointmentPaymentDto } from './dto/create-appointment-payment.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { CreateSubscriptionCheckoutDto } from './dto/create-subscription-checkout.dto';
@@ -44,7 +45,8 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly asaasProvider: AsaasProvider
+    private readonly asaasProvider: AsaasProvider,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   listActivePlans() {
@@ -297,6 +299,10 @@ export class PaymentsService {
         }
       });
     });
+
+    if (paymentStatus === PaymentStatus.PAID) {
+      await this.notificationsService.enqueuePaymentApproved(payment.id);
+    }
 
     return {
       received: true
