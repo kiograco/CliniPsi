@@ -21,3 +21,18 @@ export type PublicPsychologistProfile = {
   specialties: PublicTaxonomyItem[];
   approaches: PublicTaxonomyItem[];
 };
+
+export type SearchPsychologistResult = Omit<
+  PublicPsychologistProfile,
+  'whatsapp'
+>;
+
+export type SearchPsychologistsResponse = {
+  data: SearchPsychologistResult[];
+  meta: {
+    page: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+  };
+};

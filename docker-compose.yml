@@ -3,9 +3,10 @@ services:
     image: postgres:16-alpine
     container_name: divulgapsi-postgres
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-divulgapsi}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-divulgapsi}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"

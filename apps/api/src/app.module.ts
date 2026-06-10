@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthController } from './modules/health/health.controller';
 import { PsychologistsModule } from './modules/psychologists/psychologists.module';
+import { ScheduleModule } from './modules/schedule/schedule.module';
+import { SearchModule } from './modules/search/search.module';
 import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -14,7 +16,9 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     UsersModule,
     AuthModule,
-    PsychologistsModule
+    PsychologistsModule,
+    SearchModule,
+    ScheduleModule
   ],
   controllers: [HealthController]
 })
