@@ -14,6 +14,7 @@ import {
 } from '@prisma/client';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PaymentsService } from '../payments/payments.service';
 import { AvailableSlotsQueryDto } from './dto/available-slots-query.dto';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { CreateScheduleBlockDto } from './dto/create-schedule-block.dto';
@@ -34,7 +35,10 @@ type AvailabilityInput = {
 
 @Injectable()
 export class ScheduleService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService
+  ) {}
 
   async createAvailability(
     user: AuthenticatedUser,
@@ -226,6 +230,8 @@ export class ScheduleService {
     if (!profile) {
       throw new NotFoundException('Psicologo nao encontrado.');
     }
+
+    await this.paymentsService.ensurePsychologistCanUseSaas(psychologistId);
 
     const weekday = date.getDay();
     const [availabilities, blocks, appointments] = await Promise.all([

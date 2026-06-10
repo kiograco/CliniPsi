@@ -7,6 +7,7 @@ import {
 import {
   Prisma,
   PsychologistApprovalStatus,
+  SubscriptionStatus,
   UserRole
 } from '@prisma/client';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -118,7 +119,24 @@ export class PsychologistsService {
   async getPublicProfileBySlug(slug: string) {
     const profile = await this.prisma.psychologistProfile.findUnique({
       where: {
-        slug
+        slug,
+        OR: [
+          {
+            subscriptions: {
+              none: {}
+            }
+          },
+          {
+            subscriptions: {
+              some: {
+                status: SubscriptionStatus.ACTIVE,
+                endsAt: {
+                  gt: new Date()
+                }
+              }
+            }
+          }
+        ]
       },
       include: profileInclude
     });

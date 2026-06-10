@@ -14,6 +14,7 @@ import {
 } from '@prisma/client';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PaymentsService } from '../payments/payments.service';
 import { dateAtMinute, rangesOverlap } from '../schedule/utils/time.util';
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -38,7 +39,10 @@ const appointmentInclude = {
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService
+  ) {}
 
   async create(user: AuthenticatedUser, dto: CreateAppointmentDto) {
     if (user.role !== UserRole.PATIENT) {
@@ -66,6 +70,7 @@ export class AppointmentsService {
     }
 
     this.validateModality(psychologist, dto.modality);
+    await this.paymentsService.ensurePsychologistCanUseSaas(psychologist.id);
 
     const endAt = new Date(
       startAt.getTime() + psychologist.consultationDurationMinutes * 60_000

@@ -37,6 +37,21 @@ enum AppointmentModality {
   IN_PERSON
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELED
+}
+
 model User {
   id                    String               @id @default(uuid()) @db.Uuid
   name                  String               @db.VarChar(120)
@@ -53,6 +68,7 @@ model User {
   approvedProfiles      PsychologistProfile[] @relation("PsychologistApprovedBy")
   patientAppointments   Appointment[]          @relation("PatientAppointments")
   canceledAppointments  Appointment[]          @relation("CanceledAppointments")
+  payments              Payment[]
 
   @@index([role])
   @@index([status])
@@ -86,6 +102,7 @@ model PsychologistProfile {
   availabilities              Availability[]
   scheduleBlocks              ScheduleBlock[]
   appointments                Appointment[]
+  subscriptions               Subscription[]
 
   @@index([approvalStatus])
   @@index([city, state])
@@ -174,10 +191,75 @@ model Appointment {
   psychologist       PsychologistProfile @relation(fields: [psychologistId], references: [id], onDelete: Restrict)
   patient            User                @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Restrict)
   canceledBy         User?               @relation("CanceledAppointments", fields: [canceledById], references: [id], onDelete: SetNull)
+  payments           Payment[]
 
   @@index([psychologistId, startAt, endAt])
   @@index([patientId, startAt])
   @@index([status])
+}
+
+model Plan {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @unique @db.VarChar(120)
+  price         Decimal        @db.Decimal(10, 2)
+  durationDays  Int
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                     String             @id @default(uuid()) @db.Uuid
+  psychologistId          String             @db.Uuid
+  planId                  String             @db.Uuid
+  status                  SubscriptionStatus @default(ACTIVE)
+  startsAt                DateTime
+  endsAt                  DateTime
+  canceledAt              DateTime?
+  provider                String             @default("asaas") @db.VarChar(40)
+  providerSubscriptionId  String?            @unique @db.VarChar(120)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  psychologist            PsychologistProfile @relation(fields: [psychologistId], references: [id], onDelete: Cascade)
+  plan                    Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments                Payment[]
+
+  @@index([psychologistId, status])
+  @@index([endsAt])
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  subscriptionId    String?       @db.Uuid
+  appointmentId     String?       @db.Uuid
+  amount            Decimal       @db.Decimal(10, 2)
+  status            PaymentStatus @default(PENDING)
+  provider          String        @default("asaas") @db.VarChar(40)
+  providerPaymentId String?       @unique @db.VarChar(120)
+  checkoutUrl       String?       @db.VarChar(500)
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  appointment       Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([subscriptionId])
+  @@index([appointmentId])
+}
+
+model PaymentWebhookEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  provider    String    @default("asaas") @db.VarChar(40)
+  eventId     String    @unique @db.VarChar(160)
+  eventType   String    @db.VarChar(120)
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([provider, eventType])
 }
 
 model RefreshToken {

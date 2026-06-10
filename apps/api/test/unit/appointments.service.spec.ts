@@ -87,8 +87,12 @@ function createService() {
     }
   };
 
+  const paymentsService = {
+    ensurePsychologistCanUseSaas: jest.fn()
+  };
+
   return {
-    service: new AppointmentsService(prisma as never),
+    service: new AppointmentsService(prisma as never, paymentsService as never),
     prisma
   };
 }

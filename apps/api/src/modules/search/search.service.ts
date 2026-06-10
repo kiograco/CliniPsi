@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, PsychologistApprovalStatus } from '@prisma/client';
+import { SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   SearchModality,
@@ -34,6 +35,23 @@ export class SearchService {
 
     const where: Prisma.PsychologistProfileWhereInput = {
       approvalStatus: PsychologistApprovalStatus.APPROVED,
+      OR: [
+        {
+          subscriptions: {
+            none: {}
+          }
+        },
+        {
+          subscriptions: {
+            some: {
+              status: SubscriptionStatus.ACTIVE,
+              endsAt: {
+                gt: new Date()
+              }
+            }
+          }
+        }
+      ],
       city: query.city
         ? {
             equals: query.city.trim(),
