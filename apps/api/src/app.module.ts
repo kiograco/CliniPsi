@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { HealthController } from './modules/health/health.controller';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PsychologistsModule } from './modules/psychologists/psychologists.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { SearchModule } from './modules/search/search.module';
 import { UsersModule } from './modules/users/users.module';
@@ -24,7 +25,8 @@ import { PrismaModule } from './prisma/prisma.module';
     ScheduleModule,
     AppointmentsModule,
     AdminModule,
-    PaymentsModule
+    PaymentsModule,
+    ReviewsModule
   ],
   controllers: [HealthController]
 })

@@ -127,6 +127,23 @@ export default async function PsychologistPublicPage({
           <h2>Agendamento</h2>
           <p>Os horarios disponiveis serao exibidos na etapa de agenda.</p>
         </div>
+
+        <div className="detail-panel reviews-panel">
+          <h2>Avaliacoes</h2>
+          {profile.reviews?.length ? (
+            <div className="review-list">
+              {profile.reviews.map((review) => (
+                <article className="review-item" key={review.id}>
+                  <strong>{review.rating}/5</strong>
+                  <p>{review.comment}</p>
+                  <span>{review.patient.name}</span>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p>Ainda nao ha avaliacoes publicadas.</p>
+          )}
+        </div>
       </section>
     </main>
   );

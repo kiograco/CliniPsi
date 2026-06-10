@@ -312,13 +312,40 @@ a {
   font-size: 20px;
 }
 
+.reviews-panel {
+  grid-column: 1 / -1;
+}
+
+.review-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.review-item {
+  border: 1px solid rgba(29, 37, 40, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px;
+}
+
+.review-item strong {
+  color: #19624f;
+}
+
+.review-item span {
+  color: #5b6766;
+  font-size: 14px;
+}
+
 @media (max-width: 800px) {
   .profile-hero,
   .profile-details,
   .result-grid,
   .result-card,
   .panel-actions,
-  .panel-grid {
+  .panel-grid,
+  .review-list {
     grid-template-columns: 1fr;
   }
 

@@ -7,6 +7,8 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { AdminService } from './admin.service';
 import { CreateTaxonomyDto } from './dto/create-taxonomy.dto';
+import { ModerateReviewDto } from '../reviews/dto/moderate-review.dto';
+import { ReviewsService } from '../reviews/reviews.service';
 import { UpdatePsychologistApprovalDto } from './dto/update-psychologist-approval.dto';
 import { UpdateTaxonomyDto } from './dto/update-taxonomy.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
@@ -15,7 +17,10 @@ import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly reviewsService: ReviewsService
+  ) {}
 
   @Get('users')
   listUsers() {
@@ -52,6 +57,20 @@ export class AdminController {
   @Get('appointments')
   listAppointments() {
     return this.adminService.listAppointments();
+  }
+
+  @Get('reviews/pending')
+  listPendingReviews() {
+    return this.reviewsService.listPending();
+  }
+
+  @Patch('reviews/:id/moderate')
+  moderateReview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: ModerateReviewDto
+  ) {
+    return this.reviewsService.moderate(user, id, dto);
   }
 
   @Post('specialties')

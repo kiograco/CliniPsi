@@ -7,6 +7,7 @@ import {
 import {
   Prisma,
   PsychologistApprovalStatus,
+  ReviewModerationStatus,
   SubscriptionStatus,
   UserRole
 } from '@prisma/client';
@@ -25,6 +26,22 @@ const profileInclude = {
   approaches: {
     include: {
       approach: true
+    }
+  },
+  reviews: {
+    where: {
+      moderationStatus: ReviewModerationStatus.APPROVED
+    },
+    include: {
+      patient: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
     }
   }
 } satisfies Prisma.PsychologistProfileInclude;
@@ -390,7 +407,14 @@ export class PsychologistsService {
           id: approach.id,
           name: approach.name,
           slug: approach.slug
-        }))
+        })),
+      reviews: (profile.reviews ?? []).map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        patient: review.patient
+      }))
     };
   }
 }

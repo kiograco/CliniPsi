@@ -20,6 +20,16 @@ export type PublicPsychologistProfile = {
   whatsapp: string | null;
   specialties: PublicTaxonomyItem[];
   approaches: PublicTaxonomyItem[];
+  reviews?: Array<{
+    id: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    patient: {
+      id: string;
+      name: string;
+    };
+  }>;
 };
 
 export type SearchPsychologistResult = Omit<
