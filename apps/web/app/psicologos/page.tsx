@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { BRAZIL_STATE_OPTIONS } from '@/lib/brazil-states';
 import { searchPsychologists } from '@/services/psychologists';
 
 export const metadata: Metadata = {
@@ -41,14 +42,16 @@ export default async function PsychologistsSearchPage({
 
         <form className="search-form search-form-wide">
           <input name="city" placeholder="Cidade" defaultValue={params.city} />
-          <input
-            name="state"
-            placeholder="UF"
-            maxLength={2}
-            defaultValue={params.state}
-          />
+          <select name="state" defaultValue={params.state ?? ''}>
+            <option value="">UF</option>
+            {BRAZIL_STATE_OPTIONS.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
           <select name="modality" defaultValue={params.modality ?? ''}>
-            <option value="">Modalidade</option>
+            <option value="">Online e presencial</option>
             <option value="ONLINE">Online</option>
             <option value="IN_PERSON">Presencial</option>
           </select>
